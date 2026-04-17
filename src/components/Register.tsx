@@ -29,7 +29,12 @@ export const Register: React.FC = () => {
         user = userCredential.user;
       } catch (authErr: any) {
         if (authErr.code === "auth/email-already-in-use") {
-          setError("ይህ ኢሜል አስቀድሞ ተመዝግቧል:: እባክዎ ሎጊን (Login) ብለው ይግቡ::");
+          setError("ይህ ኢሜል አስቀድሞ ተመዝግቧል:: ምናልባት ምዝገባው ተሳክቶ ሊሆን ስለሚችል እባክዎ ሎጊን (Login) ብለው ይግቡ::");
+          setLoading(false);
+          return;
+        }
+        if (authErr.code === "auth/weak-password") {
+          setError("ፓስዎርዱ በጣም ደካማ ነው:: እባክዎ ቢያንስ 6 ቃላት ይጠቀሙ::");
           setLoading(false);
           return;
         }
