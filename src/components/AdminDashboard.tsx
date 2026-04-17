@@ -91,26 +91,24 @@ export const AdminDashboard: React.FC = () => {
                    📊 የሪፖርት አጠቃላይ ሁኔታ (Report Statistics)
                 </span>
               </div>
-              <div className="flex-1 w-full min-h-[300px] relative">
-                <div className="absolute inset-0">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie 
-                        data={chartData} 
-                        cx="50%" 
-                        cy="50%" 
-                        innerRadius="60%" 
-                        outerRadius="80%" 
-                        paddingAngle={5} 
-                        dataKey="value"
-                      >
-                        {chartData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
-                      </Pie>
-                      <Tooltip contentStyle={{ background: "#1e293b", border: "1px solid #334155", borderRadius: "8px", color: "#f8fafc" }} />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
+              <div className="flex-1 w-full min-h-[300px] relative mt-4">
+                <ResponsiveContainer width="100%" height={300} minWidth={0}>
+                  <PieChart>
+                    <Pie 
+                      data={chartData} 
+                      cx="50%" 
+                      cy="50%" 
+                      innerRadius="60%" 
+                      outerRadius="80%" 
+                      paddingAngle={5} 
+                      dataKey="value"
+                    >
+                      {chartData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
+                    </Pie>
+                    <Tooltip contentStyle={{ background: "#1e293b", border: "1px solid #334155", borderRadius: "8px", color: "#f8fafc" }} />
+                    <Legend verticalAlign="bottom" height={36}/>
+                  </PieChart>
+                </ResponsiveContainer>
               </div>
             </div>
 
