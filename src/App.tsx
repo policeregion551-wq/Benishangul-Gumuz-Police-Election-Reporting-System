@@ -48,9 +48,24 @@ const AppContent: React.FC = () => {
   if (!profile) {
     return (
       <Layout>
-        <div className="flex flex-col items-center justify-center py-20 text-center">
+        <div className="flex flex-col items-center justify-center py-20 text-center max-w-md mx-auto px-4">
            <h2 className="text-2xl font-bold golden-text mb-4">መረጃው እየተረጋጋጠ ነው...</h2>
-           <p className="text-neutral-400">የእርስዎ ፕሮፋይል በሲስተሙ ላይ እየተፈለገ ነው:: እባክዎ ጥቂት ሰከንዶች ይጠብቁ::</p>
+           <p className="text-neutral-400 mb-8">የእርስዎ ፕሮፋይል በሲስተሙ ላይ እየተፈለገ ነው:: መግባት ካልቻሉ እባክዎ እንደገና ይሞክሩ::</p>
+           <button 
+             onClick={() => window.location.reload()} 
+             className="btn-primary w-full mb-4"
+           >
+             እንደገና ሞክር (Retry)
+           </button>
+           <button 
+             onClick={() => {
+               const { signOut } = useAuth();
+               signOut();
+             }} 
+             className="text-xs text-neutral-500 hover:text-eth-red transition-colors"
+           >
+             ውጣ (Sign Out)
+           </button>
         </div>
       </Layout>
     );
