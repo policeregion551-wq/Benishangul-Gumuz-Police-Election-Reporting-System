@@ -1,0 +1,80 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Application user (Woreda, Zonal, or Regional Police)",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "zone": { "type": "string" },
+        "woreda": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "zone", "woreda"] }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "Report": {
+      "title": "Election Report",
+      "description": "Security report for a specific polling station or Woreda",
+      "type": "object",
+      "properties": {
+        "zone": { "type": "string" },
+        "woreda": { "type": "string" },
+        "isPeaceful": { "type": "boolean" },
+        "crimeType": { "type": "string" },
+        "stationName": { "type": "string" },
+        "perpetrators": {
+          "type": "object",
+          "properties": {
+            "male": { "type": "integer" },
+            "female": { "type": "integer" }
+          }
+        },
+        "injuredCount": {
+          "type": "object",
+          "properties": {
+            "male": { "type": "integer" },
+            "female": { "type": "integer" }
+          }
+        },
+        "lightInjuries": {
+          "type": "object",
+          "properties": {
+            "male": { "type": "integer" },
+            "female": { "type": "integer" }
+          }
+        },
+        "heavyInjuries": {
+          "type": "object",
+          "properties": {
+            "male": { "type": "integer" },
+            "female": { "type": "integer" }
+          }
+        },
+        "propertyDamage": { "type": "string" },
+        "suspectsCaught": { "type": "boolean" },
+        "exhibit": { "type": "string" },
+        "description": { "type": "string" },
+        "reporterName": { "type": "string" },
+        "reporterPhone": { "type": "string" },
+        "status": { "type": "string", "enum": ["new", "viewed"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "createdBy": { "type": "string" }
+      },
+      "required": ["zone", "woreda", "createdAt", "createdBy"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Registered police personnel"
+    },
+    "/reports/{reportId}": {
+      "schema": "Report",
+      "description": "Election security reports"
+    }
+  }
+}

@@ -1,0 +1,94 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Connection test document
+    match /test/connection {
+      allow read: if true;
+    }
+
+    // --- Helpers ---
+    function isSignedIn() { return request.auth != null; }
+    function isValidId(id) { return id is string && id.size() <= 128; }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    
+    // Efficient role check helper
+    function checkRole(role) {
+      let profile = get(/databases/$(database)/documents/users/$(request.auth.uid));
+      return profile != null && profile.data.role == role;
+    }
+
+    function isAdmin() { return isSignedIn() && checkRole('admin'); }
+
+    // --- Collections ---
+
+    // 1. Users Collection
+    match /users/{userId} {
+      function isValidUser(data) {
+        return data.name is string && data.name.size() <= 200 &&
+               data.role in ['admin', 'zone', 'woreda'] &&
+               data.email is string && data.email.size() <= 200 &&
+               data.uid == userId;
+      }
+
+      // Allow users to read their own profile without overhead
+      allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      
+      // Admin can create any user. 
+      // Users can register themselves as 'woreda'.
+      // BOOTSTRAP: Allow the specific admin email to create their own 'admin' profile.
+      allow create: if isSignedIn() && isValidUser(incoming()) && (
+        (request.auth.uid == userId && (
+          incoming().role == 'woreda' || 
+          (incoming().role == 'admin' && request.auth.token.email == 'policeregion551@gmail.com')
+        )) || isAdmin()
+      );
+      
+      // Updates are restricted.
+      allow update: if isSignedIn() && (
+        (request.auth.uid == userId && 
+         incoming().diff(existing()).affectedKeys().hasOnly(['name', 'phone', 'zone', 'woreda']) &&
+         incoming().role == existing().role) || isAdmin()
+      );
+    }
+
+    // 2. Reports Collection
+    match /reports/{reportId} {
+      function isValidReport(data) {
+        return data.zone is string && data.zone.size() <= 150 &&
+               data.woreda is string && data.woreda.size() <= 150 &&
+               data.createdBy == request.auth.uid &&
+               data.createdAt == request.time &&
+               data.status == 'new' &&
+               data.reporterName is string && data.reporterName.size() <= 200;
+      }
+
+      // Secure List Queries
+      allow read: if isSignedIn() && (
+        isAdmin() || 
+        (existing().createdBy == request.auth.uid) ||
+        (checkRole('zone') && existing().zone == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.zone)
+      );
+
+      // Only Woreda police or Admin can create
+      allow create: if isSignedIn() && isValidReport(incoming()) && (checkRole('woreda') || isAdmin());
+      
+      // Managed updates
+      allow update: if isSignedIn() && (
+        isAdmin() ||
+        (checkRole('zone') && existing().zone == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.zone && 
+         incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']) && 
+         incoming().updatedAt == request.time &&
+         incoming().status == 'viewed')
+      );
+      
+      // No deletion allowed to maintain election audit trail
+      allow delete: if false;
+    }
+  }
+}
