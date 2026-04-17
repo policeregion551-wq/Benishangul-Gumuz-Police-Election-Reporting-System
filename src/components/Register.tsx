@@ -23,8 +23,18 @@ export const Register: React.FC = () => {
     setLoading(true);
     setError("");
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
-      const user = userCredential.user;
+      let user;
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+        user = userCredential.user;
+      } catch (authErr: any) {
+        if (authErr.code === "auth/email-already-in-use") {
+          setError("ይህ ኢሜል አስቀድሞ ተመዝግቧል:: እባክዎ ሎጊን (Login) ብለው ይግቡ::");
+          setLoading(false);
+          return;
+        }
+        throw authErr;
+      }
       
       const profile: UserProfile = {
         uid: user.uid,
@@ -144,7 +154,11 @@ export const Register: React.FC = () => {
               </div>
             </div>
 
-            {error && <p className="text-eth-red text-xs italic md:col-span-2">{error}</p>}
+            {error && (
+              <div className="md:col-span-2 p-3 bg-eth-red/10 border border-eth-red/20 rounded-lg">
+                <p className="text-eth-red text-sm font-medium italic">{error}</p>
+              </div>
+            )}
 
             <div className="md:col-span-2 pt-4">
               <button
@@ -152,7 +166,7 @@ export const Register: React.FC = () => {
                 disabled={loading}
                 className="btn-primary w-full flex items-center justify-center gap-2 py-3"
               >
-                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <><UserPlus className="w-5 h-5" /> መርዘገብ (Register)</>}
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <><UserPlus className="w-5 h-5" /> መመዝገብ (Register)</>}
               </button>
             </div>
           </form>
