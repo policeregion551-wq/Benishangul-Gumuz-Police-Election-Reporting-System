@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { collection, onSnapshot, query, where, doc, setDoc } from "firebase/firestore";
-import { db, auth } from "../lib/firebase";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { db, auth, config } from "../lib/firebase";
+import { createUserWithEmailAndPassword, getAuth, signOut } from "firebase/auth";
+import { initializeApp, deleteApp } from "firebase/app";
 import { Report, ZONES, UserProfile } from "../types";
 import { Folder, Users, PieChart as PieChartIcon, Settings, Search, Plus, Mail, Lock, User, Phone, MapPin, Loader2, X, ChevronRight, LayoutDashboard, CheckCircle2, ShieldAlert, ClipboardList, BellRing } from "lucide-react";
 import { ReportList } from "./ReportList";
@@ -91,22 +92,37 @@ export const AdminDashboard: React.FC = () => {
                    📊 የሪፖርት አጠቃላይ ሁኔታ (Report Statistics)
                 </span>
               </div>
-              <div className="flex-1 w-full min-h-[300px] relative mt-4">
-                <ResponsiveContainer width="100%" height={300} minWidth={0}>
-                  <PieChart>
+              <div className="mt-8 relative w-full h-[350px] flex items-center justify-center overflow-hidden">
+                <ResponsiveContainer width="100%" height={300} minWidth={0} minHeight={300}>
+                  <PieChart style={{ margin: '0 auto' }}>
                     <Pie 
                       data={chartData} 
                       cx="50%" 
                       cy="50%" 
-                      innerRadius="60%" 
-                      outerRadius="80%" 
+                      innerRadius={65} 
+                      outerRadius={85} 
                       paddingAngle={5} 
                       dataKey="value"
+                      animationBegin={0}
+                      animationDuration={800}
                     >
                       {chartData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
                     </Pie>
-                    <Tooltip contentStyle={{ background: "#1e293b", border: "1px solid #334155", borderRadius: "8px", color: "#f8fafc" }} />
-                    <Legend verticalAlign="bottom" height={36}/>
+                    <Tooltip 
+                      contentStyle={{ 
+                        background: "#1e293b", 
+                        border: "1px solid #334155", 
+                        borderRadius: "8px", 
+                        color: "#f8fafc",
+                        fontSize: "12px"
+                      }} 
+                    />
+                    <Legend 
+                      verticalAlign="bottom" 
+                      height={36} 
+                      iconType="circle"
+                      wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
@@ -236,61 +252,98 @@ const AddUserModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     password: "",
   });
 
+  const [error, setError] = useState("");
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError("");
+
+    // To create a user without logging out the admin, we MUST use a secondary Firebase App instance
+    const tempAppName = `temp-app-${Date.now()}`;
+    const tempApp = initializeApp(config, tempAppName);
+    const tempAuth = getAuth(tempApp);
+
     try {
-      // Note: Admin can't easily create users for others in Firebase Auth without Firebase Admin SDK
-      // However, we can simulate this by logging out and in, but better to use a secondary app instance
-      // or just inform that in a real production this needs a Cloud Function.
-      // For this applet, I'll attempt a direct creation if possible or explain logic.
-      // Wait, we can use a separate Firebase instance or just add to users collection and handle login.
-      // Actually, let's keep it simple: Add to users collection, and inform they need to register.
-      // Better: In a controlled env, Admin writes to a 'pending_users' or just 'users' and uses their email as ID.
-      // But Firebase Auth needs createUser. 
-      // I'll implement a workaround or just register them.
-      
-      const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+      const cleanEmail = formData.email.trim().toLowerCase();
+      const userCredential = await createUserWithEmailAndPassword(tempAuth, cleanEmail, formData.password);
       const user = userCredential.user;
       
       const profile: UserProfile = {
         uid: user.uid,
-        name: formData.name,
-        phone: formData.phone,
+        name: formData.name.trim(),
+        phone: formData.phone.trim(),
         zone: formData.zone,
-        woreda: "Zonal Head",
-        email: formData.email,
+        woreda: "የዞን ሀላፊ",
+        email: cleanEmail,
         role: "zone",
       };
 
       await setDoc(doc(db, "users", user.uid), profile);
+      
+      // Clean up the secondary app immediately
+      await signOut(tempAuth);
+      await deleteApp(tempApp);
+
       alert("የዞን ተጠቃሚ በትክክል ተመዝግቧል!");
       onClose();
     } catch (err: any) {
-      alert("Error: " + err.message);
+      if (err.code === "auth/email-already-in-use") {
+        setError("ይህ ኢሜል አስቀድሞ ተመዝግቧል:: እባክዎ ሌላ ኢሜል ይጠቀሙ::");
+      } else if (err.code === "auth/weak-password") {
+        setError("ፓስዎርዱ በጣም ደካማ ነው:: ቢያንስ 6 ቃላት ይጠቀሙ::");
+      } else if (err.code === "auth/invalid-credential") {
+        setError("የገቡት መረጃ ትክክል አይደለም:: እባክዎ በትክክል ይሙሉ::");
+      } else {
+        setError("ስህተት: " + (err.message || "Unknown error"));
+      }
+      // Still try to delete the app on error
+      try { await deleteApp(tempApp); } catch (e) {}
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-      <div className="glass-card p-8 w-full max-w-lg relative bg-neutral-950">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
+      <div className="glass-card p-8 w-full max-w-lg relative bg-neutral-950 my-auto">
         <button onClick={onClose} className="absolute top-4 right-4 text-neutral-500 hover:text-eth-red">
           <X className="w-6 h-6" />
         </button>
         <h3 className="text-xl font-bold golden-text mb-6">አዲስ የዞን ተጠቃሚ መመዝገቢያ</h3>
+        
+        {error && (
+          <div className="mb-4 p-3 bg-eth-red/10 border border-eth-red/20 rounded text-eth-red text-xs italic">
+            {error}
+          </div>
+        )}
+
         <form onSubmit={handleCreate} className="space-y-4">
-          <input className="input-field w-full" placeholder="የፖሊስ ስም" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
-          <input className="input-field w-full" placeholder="ስልክ ቁጥር" required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
-          <select className="input-field w-full appearance-none" required value={formData.zone} onChange={e => setFormData({...formData, zone: e.target.value})}>
-             {ZONES.map(z => <option key={z} value={z}>{z}</option>)}
-          </select>
-          <input className="input-field w-full" type="email" placeholder="ኢሜል" required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
-          <input className="input-field w-full" type="password" placeholder="ፓስዎርድ" required value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} />
+          <div>
+            <label className="block text-[10px] uppercase tracking-widest text-neutral-500 mb-1 ml-1 font-bold">የሙሉ ስም (Full Name)</label>
+            <input className="input-field w-full" placeholder="የፖሊስ ስም" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+          </div>
+          <div>
+            <label className="block text-[10px] uppercase tracking-widest text-neutral-500 mb-1 ml-1 font-bold">ስልክ ቁጥር (Phone)</label>
+            <input className="input-field w-full" placeholder="ስልክ ቁጥር" required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
+          </div>
+          <div>
+            <label className="block text-[10px] uppercase tracking-widest text-neutral-500 mb-1 ml-1 font-bold">ዞን (Zone)</label>
+            <select className="input-field w-full appearance-none" required value={formData.zone} onChange={e => setFormData({...formData, zone: e.target.value})}>
+               {ZONES.map(z => <option key={z} value={z}>{z}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-[10px] uppercase tracking-widest text-neutral-500 mb-1 ml-1 font-bold">ኢሜል (Email)</label>
+            <input className="input-field w-full" type="email" placeholder="example@mail.com" required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
+          </div>
+          <div>
+            <label className="block text-[10px] uppercase tracking-widest text-neutral-500 mb-1 ml-1 font-bold">ፓስዎርድ (Password)</label>
+            <input className="input-field w-full" type="password" placeholder="••••••••" required value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} />
+          </div>
           
-          <button type="submit" disabled={loading} className="btn-primary w-full flex justify-center py-3">
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "ይመዝገብ (Save)"}
+          <button type="submit" disabled={loading} className="btn-primary w-full flex justify-center py-4 text-sm uppercase tracking-widest font-black shadow-gold/20 shadow-xl mt-4">
+            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "ይመዝገብ (Save User)"}
           </button>
         </form>
       </div>
