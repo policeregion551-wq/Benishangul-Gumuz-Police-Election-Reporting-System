@@ -8,7 +8,7 @@ import { ZoneDashboard, WoredaDashboard } from "./components/Dashboards";
 import { Loader2 } from "lucide-react";
 
 const AppContent: React.FC = () => {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, signOut } = useAuth();
   const [route, setRoute] = useState(window.location.hash || "#login");
 
   useEffect(() => {
@@ -57,10 +57,7 @@ const AppContent: React.FC = () => {
              እንደገና ሞክር (Retry)
            </button>
            <button 
-             onClick={() => {
-               const { signOut } = useAuth();
-               signOut();
-             }} 
+             onClick={() => signOut()} 
              className="text-xs text-neutral-500 hover:text-eth-red transition-colors"
            >
              ውጣ (Sign Out)
