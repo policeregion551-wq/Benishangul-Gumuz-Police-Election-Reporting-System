@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { collection, onSnapshot, query, where, doc, setDoc } from "firebase/firestore";
-import { db, auth, config } from "../lib/firebase";
+import { db, auth, firebaseAppConfig as config } from "../lib/firebase";
 import { createUserWithEmailAndPassword, getAuth, signOut } from "firebase/auth";
 import { initializeApp, deleteApp } from "firebase/app";
 import { Report, ZONES, UserProfile } from "../types";
