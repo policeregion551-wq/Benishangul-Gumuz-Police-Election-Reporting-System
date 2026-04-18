@@ -7,7 +7,7 @@ import { cn } from "../lib/utils";
 
 export const ZoneDashboard: React.FC = () => {
   const { profile } = useAuth();
-  const [activeTab, setActiveTab] = useState<"dashboard" | "manual">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "form" | "reports" | "manual">("dashboard");
 
   if (!profile) return null;
 
@@ -24,6 +24,24 @@ export const ZoneDashboard: React.FC = () => {
           <LayoutDashboard className="w-4 h-4" /> ዳሽቦርድ (Dashboard)
         </button>
         <button
+          onClick={() => setActiveTab("form")}
+          className={cn(
+            "flex items-center gap-2 px-4 py-2 rounded-lg transition-all whitespace-nowrap text-sm",
+            activeTab === "form" ? "bg-gold text-neutral-950 font-bold" : "text-neutral-400 hover:bg-neutral-900"
+          )}
+        >
+          <FileText className="w-4 h-4" /> ሪፖርት መላኪያ (Send Report)
+        </button>
+        <button
+          onClick={() => setActiveTab("reports")}
+          className={cn(
+            "flex items-center gap-2 px-4 py-2 rounded-lg transition-all whitespace-nowrap text-sm",
+            activeTab === "reports" ? "bg-gold text-neutral-950 font-bold" : "text-neutral-400 hover:bg-neutral-900"
+          )}
+        >
+          <Folder className="w-4 h-4" /> የእኔ ሪፖርቶች
+        </button>
+        <button
           onClick={() => setActiveTab("manual")}
           className={cn(
             "flex items-center gap-2 px-4 py-2 rounded-lg transition-all whitespace-nowrap text-sm",
@@ -37,7 +55,9 @@ export const ZoneDashboard: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold golden-text">የ{profile.zone} ፖሊስ መቆጣጠሪያ</h2>
-          <p className="text-neutral-400 text-sm">በዞኑ ስር ያሉ ወረዳዎች የሚልኩትን ሪፖርት እዚህ ማየት ይችላሉ</p>
+          <p className="text-neutral-400 text-sm">
+            {activeTab === "form" ? "በወረዳዎች ምትክ ሪፖርት ማቅረብ ይችላሉ" : "በዞኑ ስር ያሉ ወረዳዎች የሚልኩትን ሪፖርት እዚህ ማየት ይችላሉ"}
+          </p>
         </div>
         <div className="flex items-center gap-4 bg-neutral-900/50 px-6 py-3 rounded-2xl border border-neutral-800">
           <div className="text-right">
@@ -48,7 +68,7 @@ export const ZoneDashboard: React.FC = () => {
         </div>
       </div>
 
-      {activeTab === "dashboard" ? (
+      {activeTab === "dashboard" && (
         <div className="space-y-6">
           <div className="flex items-center gap-2 text-neutral-400 mb-4 px-2">
             < BellRing className="w-4 h-4" />
@@ -56,9 +76,25 @@ export const ZoneDashboard: React.FC = () => {
           </div>
           <ReportList filter={{ zone: profile.zone }} />
         </div>
-      ) : (
-        <ManualContent />
       )}
+
+      {activeTab === "form" && (
+        <div className="glass-card p-4 md:p-8">
+           <ReportForm onSuccess={() => setActiveTab("reports")} />
+        </div>
+      )}
+
+      {activeTab === "reports" && (
+        <div className="space-y-6">
+          <div className="flex items-center gap-2 text-neutral-400 mb-4 px-2">
+            <Folder className="w-4 h-4" />
+            <span className="text-xs font-bold uppercase tracking-widest">እርስዎ ያቀረቧቸው ሪፖርቶች</span>
+          </div>
+          <ReportList filter={{ createdBy: profile.uid }} />
+        </div>
+      )}
+
+      {activeTab === "manual" && <ManualContent />}
     </div>
   );
 };
@@ -153,6 +189,7 @@ const ManualContent: React.FC = () => (
           <li className="flex gap-2"><span>2.</span> አዲስ ሪፖርት ሲደርስ "አዲስ (NEW)" የሚል ምልክት ያሳያል::</li>
           <li className="flex gap-2"><span>3.</span> እያንዳንዱን ሪፖርት መክፈት፣ ፕሪንት ማድረግና ዳውንሎድ ማድረግ ይቻላል::</li>
           <li className="flex gap-2"><span>4.</span> ክልል ፖሊስ (Admin) ለዞንና ለወረዳ ተጠቃሚዎች አካውንት መፍጠር ይችላል::</li>
+          <li className="flex gap-2"><span>5.</span> የዞን ፖሊስ የወረዳዎች ኔትዎርክ ካልሰራ "ሪፖርት መላኪያ" ላይ በመግባት በወረዳው ስም ሪፖርት መላክ ይችላል::</li>
         </ul>
       </div>
     </div>
