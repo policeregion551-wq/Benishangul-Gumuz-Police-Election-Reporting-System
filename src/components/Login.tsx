@@ -15,9 +15,16 @@ export const Login: React.FC = () => {
     setLoading(true);
     setError("");
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const cleanEmail = email.trim().toLowerCase();
+      await signInWithEmailAndPassword(auth, cleanEmail, password);
     } catch (err: any) {
-      setError("የተሳሳተ ኢሜል ወይም ፓስዎርድ ገብቷል:: እባክዎ እንደገና ይሞክሩ::");
+      if (err.code === "auth/invalid-credential" || err.code === "auth/wrong-password") {
+        setError("የገቡት ኢሜል ወይም ፓስዎርድ ትክክል አይደለም:: እባክዎ በትክክል መሙላትዎን ያረጋግጡ::");
+      } else if (err.code === "auth/user-not-found") {
+        setError("ይህ ኢሜል በሲስተሙ ውስጥ አልተገኘም:: እባክዎ መጀመሪያ ረጂሰተር ያድርጉ::");
+      } else {
+        setError("ስህተት አጋጥሟል: " + (err.message || "Unknown error"));
+      }
       console.error(err);
     } finally {
       setLoading(false);
