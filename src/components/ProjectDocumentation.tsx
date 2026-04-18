@@ -1,6 +1,7 @@
 import React from "react";
 import ReactMarkdown from "react-markdown";
 
+// Benishangul Gumuz Police Election Reporting System Documentation
 const documentationText = `# የቤንሻንጉል ጉሙዝ ክልል ፖሊስ ኮሚሽን የ7ኛው አገራዊ እና ክልላዊ ምርጫ የጸጥታ ሪፖርት ማቅረቢያ ሲስተም ሰነድ (PROJECT DOCUMENTATION)
 
 ## 1. መግቢያ (Introduction)
