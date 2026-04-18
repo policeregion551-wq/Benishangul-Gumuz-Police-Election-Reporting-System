@@ -21,7 +21,7 @@ export const Login: React.FC = () => {
       if (err.code === "auth/invalid-credential" || err.code === "auth/wrong-password") {
         setError("የገቡት ኢሜል ወይም ፓስዎርድ ትክክል አይደለም:: እባክዎ በትክክል መሙላትዎን ያረጋግጡ::");
       } else if (err.code === "auth/user-not-found") {
-        setError("ይህ ኢሜል በሲስተሙ ውስጥ አልተገኘም:: እባክዎ መጀመሪያ ረጂሰተር ያድርጉ::");
+        setError("ይህ ኢሜል በሲስተሙ ውስጥ አልተገኘም:: እባክዎ አድሚኑን ያነጋግሩ::");
       } else {
         setError("ስህተት አጋጥሟል: " + (err.message || "Unknown error"));
       }
@@ -88,8 +88,8 @@ export const Login: React.FC = () => {
           </form>
 
           <div className="mt-8 pt-6 border-t border-neutral-800 text-center">
-            <p className="text-neutral-500 text-xs">
-              ከወረዳ መጥተው ከሆነ መጀመሪያ <a href="#register" className="text-gold hover:underline">ረጂሰተር (Register)</a> ያድርጉ
+            <p className="text-neutral-500 text-[10px] italic">
+              ቤንሻንጉል ጉሙዝ ክልል ፖሊስ ኮሚሽን
             </p>
           </div>
         </div>
