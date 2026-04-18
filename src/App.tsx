@@ -41,7 +41,6 @@ const AppContent: React.FC = () => {
   }
 
   if (!user) {
-    if (route === "#register") return <Register />;
     return <Login />;
   }
 
