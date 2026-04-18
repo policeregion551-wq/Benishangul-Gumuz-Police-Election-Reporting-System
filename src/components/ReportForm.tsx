@@ -103,14 +103,22 @@ export const ReportForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) =
             <h4 className="text-gold font-serif text-xl border-b border-gold/20 pb-2">የወንጀሉ ዝርዝር</h4>
             
             <div>
-              <label className="block text-sm font-medium text-neutral-400 mb-1">የወንጀል አይነት</label>
-              <input
-                type="text"
+              <label className="block text-sm font-medium text-neutral-400 mb-1">የወንጀል አይነት (Crime Type)</label>
+              <select
                 required={!isPeaceful}
-                className="input-field w-full"
+                className="input-field w-full appearance-none"
                 value={formData.crimeType}
                 onChange={(e) => setFormData({...formData, crimeType: e.target.value})}
-              />
+              >
+                <option value="">-- ይምረጡ (Select) --</option>
+                <option value="የመራጭ ማስፈራራት">የመራጭ ማስፈራራት (Voter Intimidation)</option>
+                <option value="የድምፅ መስጫ ሳጥን ስርቆት">የድምፅ መስጫ ሳጥን ስርቆት (Ballot Box Theft)</option>
+                <option value="ያልተፈቀደ ቅስቀሳ">ያልተፈቀደ ቅስቀሳ (Illegal Campaigning)</option>
+                <option value="ግርግር እና ሁከት">ግርግር እና ሁከት (Mob Violence)</option>
+                <option value="የመራጮች መታወቂያ ማጭበርበር">የመራጮች መታወቂያ ማጭበርበር (Voter ID Fraud)</option>
+                <option value="የምርጫ ጣቢያ መስተጓጎል">የምርጫ ጣቢያ መስተጓጎል (Polling Station Disruption)</option>
+                <option value="ሌላ">ሌላ (Other)</option>
+              </select>
             </div>
 
             <div>
