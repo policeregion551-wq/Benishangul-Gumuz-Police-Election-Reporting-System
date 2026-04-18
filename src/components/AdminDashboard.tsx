@@ -14,7 +14,7 @@ export const AdminDashboard: React.FC = () => {
   const [reports, setReports] = useState<Report[]>([]);
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [selectedZone, setSelectedZone] = useState<string | null>(null);
-  const [showAddUser, setShowAddUser] = useState(false);
+  const [showAddUser, setShowAddUser] = useState<{ show: boolean; role: "zone" | "woreda" }>({ show: false, role: "zone" });
 
   useEffect(() => {
     const unsubReports = onSnapshot(collection(db, "reports"), (snap) => {
@@ -202,19 +202,27 @@ export const AdminDashboard: React.FC = () => {
       )}
 
       {activeTab === "users" && (
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
+        <div className="space-y-6 text-eth-text">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <h3 className="text-xl font-bold golden-text">የሲስተም ተጠቃሚዎች / Systems Users</h3>
-            <button
-              onClick={() => setShowAddUser(true)}
-              className="btn-primary flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" /> ለዞን ፖሊስ መግቢያ ፍጠር
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setShowAddUser({ show: true, role: "zone" })}
+                className="btn-primary flex items-center gap-2 text-xs py-2 px-3 md:px-4 md:py-3 md:text-sm"
+              >
+                <Plus className="w-4 h-4" /> የዞን ፖሊስ መግቢያ ፍጠር
+              </button>
+              <button
+                onClick={() => setShowAddUser({ show: true, role: "woreda" })}
+                className="bg-accent-green hover:bg-accent-green/80 text-white font-bold rounded-lg transition-all flex items-center gap-2 text-xs py-2 px-3 md:px-4 md:py-3 md:text-sm"
+              >
+                <Plus className="w-4 h-4" /> የወረዳ ፖሊስ መግቢያ ፍጠር
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {users.map((u) => (
+            {users.filter(u => u.role !== 'admin').map((u) => (
               <div key={u.uid} className="glass-card p-6 flex items-start gap-4">
                 <div className="p-3 bg-neutral-800 rounded-full">
                   <User className="w-6 h-6 text-gold" />
@@ -223,11 +231,14 @@ export const AdminDashboard: React.FC = () => {
                   <p className="font-bold text-neutral-100 truncate">{u.name}</p>
                   <p className="text-xs text-neutral-500 mb-2 truncate">{u.email}</p>
                   <div className="flex flex-col gap-1">
-                    <span className="text-[10px] bg-neutral-900 text-neutral-400 px-2 py-0.5 rounded border border-neutral-800 w-fit">
-                      {u.role.toUpperCase()}
+                    <span className={cn(
+                      "text-[10px] px-2 py-0.5 rounded border w-fit font-bold uppercase",
+                      u.role === 'zone' ? "bg-gold/10 text-gold border-gold/20" : "bg-accent-green/10 text-accent-green border-accent-green/20"
+                    )}>
+                      {u.role === 'zone' ? 'ዞን (ZONE)' : 'ወረዳ (Woreda)'}
                     </span>
-                    <span className="text-xs text-gold flex items-center gap-1">
-                       <MapPin className="w-3 h-3" /> {u.zone} - {u.woreda}
+                    <span className="text-xs text-neutral-400 flex items-center gap-1 mt-1 truncate">
+                       <MapPin className="w-3 h-3 text-gold" /> {u.zone} {u.woreda && <> <ChevronRight className="w-2 h-2" /> {u.woreda}</>}
                     </span>
                   </div>
                 </div>
@@ -237,17 +248,23 @@ export const AdminDashboard: React.FC = () => {
         </div>
       )}
 
-      {showAddUser && <AddUserModal onClose={() => setShowAddUser(false)} />}
+      {showAddUser.show && (
+        <AddUserModal 
+          role={showAddUser.role} 
+          onClose={() => setShowAddUser({ ...showAddUser, show: false })} 
+        />
+      )}
     </div>
   );
 };
 
-const AddUserModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+const AddUserModal: React.FC<{ role: "zone" | "woreda"; onClose: () => void }> = ({ role, onClose }) => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
     zone: ZONES[0],
+    woreda: "",
     email: "",
     password: "",
   });
@@ -274,9 +291,9 @@ const AddUserModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         name: formData.name.trim(),
         phone: formData.phone.trim(),
         zone: formData.zone,
-        woreda: "የዞን ሀላፊ",
+        woreda: role === "zone" ? "የዞን ሀላፊ" : formData.woreda.trim(),
         email: cleanEmail,
-        role: "zone",
+        role: role,
       };
 
       await setDoc(doc(db, "users", user.uid), profile);
@@ -285,7 +302,7 @@ const AddUserModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       await signOut(tempAuth);
       await deleteApp(tempApp);
 
-      alert("የዞን ተጠቃሚ በትክክል ተመዝግቧል!");
+      alert(`${role === "zone" ? "የዞን" : "የወረዳ"} ተጠቃሚ በትክክል ተመዝግቧል!`);
       onClose();
     } catch (err: any) {
       if (err.code === "auth/email-already-in-use") {
@@ -297,7 +314,6 @@ const AddUserModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       } else {
         setError("ስህተት: " + (err.message || "Unknown error"));
       }
-      // Still try to delete the app on error
       try { await deleteApp(tempApp); } catch (e) {}
     } finally {
       setLoading(false);
@@ -306,44 +322,73 @@ const AddUserModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
-      <div className="glass-card p-8 w-full max-w-lg relative bg-neutral-950 my-auto">
-        <button onClick={onClose} className="absolute top-4 right-4 text-neutral-500 hover:text-eth-red">
+      <div className="glass-card p-6 md:p-8 w-full max-w-lg relative bg-neutral-950 my-auto shadow-[0_0_50px_-12px_rgba(184,134,11,0.3)] border-gold/20">
+        <button onClick={onClose} className="absolute top-4 right-4 text-neutral-500 hover:text-eth-red transition-colors">
           <X className="w-6 h-6" />
         </button>
-        <h3 className="text-xl font-bold golden-text mb-6">አዲስ የዞን ተጠቃሚ መመዝገቢያ</h3>
+        <h3 className="text-xl font-bold golden-text mb-6 flex items-center gap-2">
+          {role === "zone" ? <ShieldAlert className="w-5 h-5 text-gold" /> : <LayoutDashboard className="w-5 h-5 text-accent-green" />}
+          አዲስ {role === "zone" ? "የዞን" : "የወረዳ"} ተጠቃሚ መመዝገቢያ
+        </h3>
         
         {error && (
-          <div className="mb-4 p-3 bg-eth-red/10 border border-eth-red/20 rounded text-eth-red text-xs italic">
+          <div className="mb-4 p-3 bg-eth-red/10 border border-eth-red/20 rounded text-eth-red text-xs italic animate-in shake duration-300">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleCreate} className="space-y-4">
-          <div>
+        <form onSubmit={handleCreate} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="md:col-span-2">
             <label className="block text-[10px] uppercase tracking-widest text-neutral-500 mb-1 ml-1 font-bold">የሙሉ ስም (Full Name)</label>
-            <input className="input-field w-full" placeholder="የፖሊስ ስም" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-600" />
+              <input className="input-field w-full pl-10" placeholder="የሙሉ ስም" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+            </div>
           </div>
+          
           <div>
             <label className="block text-[10px] uppercase tracking-widest text-neutral-500 mb-1 ml-1 font-bold">ስልክ ቁጥር (Phone)</label>
-            <input className="input-field w-full" placeholder="ስልክ ቁጥር" required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
+            <div className="relative">
+              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-600" />
+              <input className="input-field w-full pl-10" placeholder="09..." required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
+            </div>
           </div>
+
           <div>
             <label className="block text-[10px] uppercase tracking-widest text-neutral-500 mb-1 ml-1 font-bold">ዞን (Zone)</label>
             <select className="input-field w-full appearance-none" required value={formData.zone} onChange={e => setFormData({...formData, zone: e.target.value})}>
                {ZONES.map(z => <option key={z} value={z}>{z}</option>)}
             </select>
           </div>
-          <div>
+
+          {role === "woreda" && (
+            <div className="md:col-span-2">
+              <label className="block text-[10px] uppercase tracking-widest text-neutral-500 mb-1 ml-1 font-bold">የወረዳ ስም (Woreda Name)</label>
+              <div className="relative">
+                 <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-600" />
+                 <input className="input-field w-full pl-10" placeholder="የወረዳውን ስም ያስገቡ" required value={formData.woreda} onChange={e => setFormData({...formData, woreda: e.target.value})} />
+              </div>
+            </div>
+          )}
+
+          <div className="md:col-span-2">
             <label className="block text-[10px] uppercase tracking-widest text-neutral-500 mb-1 ml-1 font-bold">ኢሜል (Email)</label>
-            <input className="input-field w-full" type="email" placeholder="example@mail.com" required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-600" />
+              <input className="input-field w-full pl-10" type="email" placeholder="example@mail.com" required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
+            </div>
           </div>
-          <div>
+
+          <div className="md:col-span-2">
             <label className="block text-[10px] uppercase tracking-widest text-neutral-500 mb-1 ml-1 font-bold">ፓስዎርድ (Password)</label>
-            <input className="input-field w-full" type="password" placeholder="••••••••" required value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} />
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-600" />
+              <input className="input-field w-full pl-10" type="password" placeholder="••••••••" required value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} />
+            </div>
           </div>
           
-          <button type="submit" disabled={loading} className="btn-primary w-full flex justify-center py-4 text-sm uppercase tracking-widest font-black shadow-gold/20 shadow-xl mt-4">
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "ይመዝገብ (Save User)"}
+          <button type="submit" disabled={loading} className="md:col-span-2 btn-primary w-full flex justify-center py-4 text-xs uppercase tracking-widest font-black shadow-gold/20 shadow-xl mt-4">
+            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : `አዲስ ${role === "zone" ? "የዞን" : "የወረዳ"} ተጠቃሚ መዝግብ`}
           </button>
         </form>
       </div>
