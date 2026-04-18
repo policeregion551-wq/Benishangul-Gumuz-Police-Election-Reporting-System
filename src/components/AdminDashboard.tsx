@@ -4,13 +4,14 @@ import { db, auth, firebaseAppConfig as config } from "../lib/firebase";
 import { createUserWithEmailAndPassword, getAuth, signOut } from "firebase/auth";
 import { initializeApp, deleteApp } from "firebase/app";
 import { Report, ZONES, UserProfile } from "../types";
-import { Folder, Users, PieChart as PieChartIcon, Settings, Search, Plus, Mail, Lock, User, Phone, MapPin, Loader2, X, ChevronRight, LayoutDashboard, CheckCircle2, ShieldAlert, ClipboardList, BellRing } from "lucide-react";
+import { Folder, Users, PieChart as PieChartIcon, Settings, Search, Plus, Mail, Lock, User, Phone, MapPin, Loader2, X, ChevronRight, LayoutDashboard, CheckCircle2, ShieldAlert, ClipboardList, BellRing, BookOpen } from "lucide-react";
 import { ReportList } from "./ReportList";
+import { ProjectDocumentation } from "./ProjectDocumentation";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 import { cn, formatDate } from "../lib/utils";
 
 export const AdminDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<"dashboard" | "reports" | "users" | "settings">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "reports" | "users" | "settings" | "docs">("dashboard");
   const [reports, setReports] = useState<Report[]>([]);
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [selectedZone, setSelectedZone] = useState<string | null>(null);
@@ -71,6 +72,15 @@ export const AdminDashboard: React.FC = () => {
           )}
         >
           <Users className="w-4 h-4" /> ተጠቃሚዎች
+        </button>
+        <button
+          onClick={() => setActiveTab("docs")}
+          className={cn(
+            "flex items-center gap-2 px-4 py-3 rounded-lg transition-all border-l-2 md:border-l-4 whitespace-nowrap text-sm md:text-base",
+            activeTab === "docs" ? "bg-gold/10 border-gold text-gold font-bold" : "text-neutral-400 border-transparent hover:bg-white/5"
+          )}
+        >
+          <BookOpen className="w-4 h-4" /> የሲስተም ሰነድ (Docs)
         </button>
       </div>
 
@@ -246,6 +256,10 @@ export const AdminDashboard: React.FC = () => {
             ))}
           </div>
         </div>
+      )}
+
+      {activeTab === "docs" && (
+        <ProjectDocumentation />
       )}
 
       {showAddUser.show && (
