@@ -68,8 +68,9 @@ export const ReportList: React.FC<ReportListProps> = ({ filter }) => {
           ምንም አይነት ሪፖርት አልተገኘም::
         </div>
       ) : (
-        <div className="report-table-section glass-card overflow-hidden">
-          <div className="hidden md:grid grid-cols-[120px_140px_140px_1fr_120px_100px] table-header-custom">
+        <div className="report-table-section glass-card overflow-x-auto no-scrollbar">
+          <div className="min-w-[700px] md:min-w-0">
+            <div className="hidden md:grid grid-cols-[120px_140px_140px_1fr_120px_100px] table-header-custom">
             <span>ሰዓት (Time)</span>
             <span>ዞን (Zone)</span>
             <span>ወረዳ (Woreda)</span>
@@ -120,6 +121,7 @@ export const ReportList: React.FC<ReportListProps> = ({ filter }) => {
                 </div>
               </div>
             ))}
+          </div>
           </div>
         </div>
       )}
