@@ -138,7 +138,7 @@ const ManualContent: React.FC = () => (
       <div className="space-y-4">
         <h4 className="text-gold font-bold border-l-4 border-gold pl-3">ለወረዳ ፖሊስ ተጠቃሚዎች</h4>
         <ul className="space-y-3 text-neutral-300 text-sm">
-          <li className="flex gap-2"><span>1.</span> መጀመሪያ "ረጂሰተር" የሚለውን በመጫን መረጃዎን በትክክል ይመዝግቡ::</li>
+          <li className="flex gap-2"><span>1.</span> በእርስዎ ወረዳ ስም በአድሚኑ የተከፈለልዎትን ኢሜልና ፓስዎርድ በመጠቀም ሎጊን ያድርጉ::</li>
           <li className="flex gap-2"><span>2.</span> ከገቡ በኋላ "ሪፖርት መላኪያ" በሚለው ፎርም መረጃዎችን ይሙሉ::</li>
           <li className="flex gap-2"><span>3.</span> ሁኔታው ሰላም ከሆነ "ሰላም ነው" የሚለውን ይጫኑ::</li>
           <li className="flex gap-2"><span>4.</span> ወንጀል ተከስቶ ከሆነ ዝርዝሮችን ሞልተው "ሪፖርት ላክ" ይበሉ::</li>
@@ -152,7 +152,7 @@ const ManualContent: React.FC = () => (
           <li className="flex gap-2"><span>1.</span> በዳሽቦርዱ ላይ የተላኩ ሪፖርቶችን ማየት ይችላሉ::</li>
           <li className="flex gap-2"><span>2.</span> አዲስ ሪፖርት ሲደርስ "አዲስ (NEW)" የሚል ምልክት ያሳያል::</li>
           <li className="flex gap-2"><span>3.</span> እያንዳንዱን ሪፖርት መክፈት፣ ፕሪንት ማድረግና ዳውንሎድ ማድረግ ይቻላል::</li>
-          <li className="flex gap-2"><span>4.</span> ክልል ፖሊስ ለዞን ተጠቃሚዎች አካውንት መፍጠር ይችላል::</li>
+          <li className="flex gap-2"><span>4.</span> ክልል ፖሊስ (Admin) ለዞንና ለወረዳ ተጠቃሚዎች አካውንት መፍጠር ይችላል::</li>
         </ul>
       </div>
     </div>
