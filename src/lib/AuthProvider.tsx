@@ -37,13 +37,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (user) {
         const docRef = doc(db, "users", user.uid);
         
-        // Use onSnapshot for real-time profile updates (critical for registration flow)
         unsubscribeProfile = onSnapshot(docRef, async (docSnap) => {
           if (docSnap.exists()) {
             setProfile(docSnap.data() as UserProfile);
             setLoading(false);
           } else {
-            // Check if it's the admin bootstrap
+            // Profile missing: 
+            // If it's the admin, bootstrap it
             if (user.email === "policeregion551@gmail.com") {
               const adminProfile: UserProfile = {
                 uid: user.uid,
@@ -55,14 +55,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 role: "admin"
               };
               await setDoc(docRef, adminProfile);
-              // onSnapshot will trigger again and set profile/loading
             } else {
               setProfile(null);
               setLoading(false);
             }
           }
         }, (err) => {
-          console.error("Profile listener error:", err);
+          console.error("Profile listener internal error:", err);
           setLoading(false);
         });
       } else {
