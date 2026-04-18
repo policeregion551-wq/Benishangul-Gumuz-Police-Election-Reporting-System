@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 import { useAuth } from "../lib/AuthProvider";
-import { Folder, MapPin, Clock, LayoutDashboard, FileText, BellRing, Info } from "lucide-react";
+import { Folder, MapPin, Clock, LayoutDashboard, FileText, BellRing, Info, BookOpen } from "lucide-react";
 import { ReportList } from "./ReportList";
 import { ReportForm } from "./ReportForm";
+import { ProjectDocumentation } from "./ProjectDocumentation";
 import { cn } from "../lib/utils";
 
 export const ZoneDashboard: React.FC = () => {
   const { profile } = useAuth();
-  const [activeTab, setActiveTab] = useState<"dashboard" | "form" | "reports" | "manual">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "form" | "reports" | "manual" | "docs">("dashboard");
 
   if (!profile) return null;
 
@@ -49,6 +50,15 @@ export const ZoneDashboard: React.FC = () => {
           )}
         >
           <Info className="w-4 h-4" /> መመሪያ (Manual)
+        </button>
+        <button
+          onClick={() => setActiveTab("docs")}
+          className={cn(
+            "flex items-center gap-2 px-4 py-2 rounded-lg transition-all whitespace-nowrap text-sm",
+            activeTab === "docs" ? "bg-gold text-neutral-950 font-bold" : "text-neutral-400 hover:bg-neutral-900"
+          )}
+        >
+          <BookOpen className="w-4 h-4" /> የሲስተም ሰነድ (Docs)
         </button>
       </div>
 
@@ -95,13 +105,14 @@ export const ZoneDashboard: React.FC = () => {
       )}
 
       {activeTab === "manual" && <ManualContent />}
+      {activeTab === "docs" && <ProjectDocumentation />}
     </div>
   );
 };
 
 export const WoredaDashboard: React.FC = () => {
   const { profile } = useAuth();
-  const [activeTab, setActiveTab] = useState<"form" | "reports" | "manual">("form");
+  const [activeTab, setActiveTab] = useState<"form" | "reports" | "manual" | "docs">("form");
 
   if (!profile) return null;
 
@@ -135,6 +146,15 @@ export const WoredaDashboard: React.FC = () => {
         >
           <Info className="w-4 h-4" /> መመሪያ (Manual)
         </button>
+        <button
+          onClick={() => setActiveTab("docs")}
+          className={cn(
+            "flex items-center gap-2 px-4 py-2 rounded-lg transition-all whitespace-nowrap text-sm",
+            activeTab === "docs" ? "bg-gold text-neutral-950 font-bold" : "text-neutral-400 hover:bg-neutral-900"
+          )}
+        >
+          <BookOpen className="w-4 h-4" /> የሲስተም ሰነድ (Docs)
+        </button>
       </div>
 
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -159,6 +179,8 @@ export const WoredaDashboard: React.FC = () => {
       )}
 
       {activeTab === "manual" && <ManualContent />}
+      
+      {activeTab === "docs" && <ProjectDocumentation />}
     </div>
   );
 };
