@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { auth, db } from "../lib/firebase";
 import { UserPlus, Mail, Lock, User, Phone, MapPin, Loader2 } from "lucide-react";
@@ -23,37 +23,63 @@ export const Register: React.FC = () => {
     setLoading(true);
     setError("");
     try {
+      const cleanEmail = formData.email.trim().toLowerCase();
+      const cleanPassword = formData.password;
+      
       let user;
       try {
-        const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+        const userCredential = await createUserWithEmailAndPassword(auth, cleanEmail, cleanPassword);
         user = userCredential.user;
       } catch (authErr: any) {
         if (authErr.code === "auth/email-already-in-use") {
-          setError("ይህ ኢሜል አስቀድሞ ተመዝግቧል:: ምናልባት ምዝገባው ተሳክቶ ሊሆን ስለሚችል እባክዎ ሎጊን (Login) ብለው ይግቡ::");
-          setLoading(false);
-          return;
-        }
-        if (authErr.code === "auth/weak-password") {
+          // If already in use, try to sign in and fix the profile if it's missing
+          try {
+             const signInCred = await signInWithEmailAndPassword(auth, cleanEmail, cleanPassword);
+             user = signInCred.user;
+          } catch (signInErr: any) {
+             setError("ይህ ኢሜል አስቀድሞ ተመዝግቧል:: እባክዎ በትክክለኛው ፓስዎርድ ሎጊን (Login) ብለው ይግቡ::");
+             setLoading(false);
+             return;
+          }
+        } else if (authErr.code === "auth/weak-password") {
           setError("ፓስዎርዱ በጣም ደካማ ነው:: እባክዎ ቢያንስ 6 ቃላት ይጠቀሙ::");
           setLoading(false);
           return;
+        } else {
+          throw authErr;
         }
-        throw authErr;
       }
       
-      const profile: UserProfile = {
-        uid: user.uid,
-        name: formData.name,
-        phone: formData.phone,
-        zone: formData.zone,
-        woreda: formData.woreda,
-        email: formData.email,
-        role: "woreda",
-      };
+      if (user) {
+        const profile: UserProfile = {
+          uid: user.uid,
+          name: formData.name.trim(),
+          phone: formData.phone.trim(),
+          zone: formData.zone,
+          woreda: formData.woreda.trim(),
+          email: cleanEmail,
+          role: "woreda",
+        };
 
-      await setDoc(doc(db, "users", user.uid), profile);
+        // If it's the admin email, use admin role instead
+        if (cleanEmail === "policeregion551@gmail.com") {
+          profile.role = "admin";
+        }
+
+        await setDoc(doc(db, "users", user.uid), profile);
+      }
     } catch (err: any) {
-      setError("ምዝገባው አልተሳካም:: እባክዎ መረጃዎን ቼክ ያድርጉ::");
+      if (err.code === "auth/email-already-in-use") {
+        setError("ይህ ኢሜል አስቀድሞ ተመዝግቧል:: እባክዎ በትክክለኛው ፓስዎርድ ሎጊን (Login) ብለው ይግቡ::");
+      } else if (err.code === "auth/weak-password") {
+        setError("ፓስዎርዱ በጣም ደካማ ነው:: ቢያንስ 6 ቃላት ይጠቀሙ::");
+      } else if (err.code === "auth/invalid-credential") {
+        setError("የገቡት ፓስዎርድ ወይም መረጃ ትክክል አይደለም:: እባክዎ በትክክል ይሙሉ::");
+      } else if (err.code === "auth/invalid-email") {
+        setError("የገቡት ኢሜል ትክክል አይደለም::");
+      } else {
+        setError("ምዝገባው አልተሳካም:: " + (err.message || "እባክዎ መረጃዎን ቼክ ያድርጉ::"));
+      }
       console.error(err);
     } finally {
       setLoading(false);
@@ -66,8 +92,8 @@ export const Register: React.FC = () => {
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-2xl glass-card p-8 shadow-2xl">
           <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold golden-text mb-2">ረጂሰተር (Register)</h2>
-            <p className="text-neutral-400 text-sm italic">አዲስ ተጠቃሚ ለመሆን መረጃዎን በትክክል ያስገቡ</p>
+            <h2 className="text-2xl font-bold golden-text mb-2">የወረዳ ፖሊስ መመዝገቢያ (Register)</h2>
+            <p className="text-neutral-400 text-sm italic">አዲስ የወረዳ ተጠቃሚ ለመሆን መረጃዎን በትክክል ያስገቡ</p>
           </div>
 
           <form onSubmit={handleRegister} className="grid grid-cols-1 md:grid-cols-2 gap-6">
