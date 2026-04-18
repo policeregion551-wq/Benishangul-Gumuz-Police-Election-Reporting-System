@@ -20,7 +20,8 @@
 
 @layer base {
   body {
-    @apply bg-deep-blue text-text-light font-sans antialiased overflow-x-hidden;
+    @apply bg-deep-blue text-text-light font-sans antialiased;
+    overflow: auto;
   }
 }
 
