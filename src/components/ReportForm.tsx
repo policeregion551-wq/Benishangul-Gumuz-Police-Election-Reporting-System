@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { useAuth } from "../lib/AuthProvider";
-import { Send, CheckCircle2, AlertTriangle, User, Users, Home, ClipboardList, ShieldAlert, Loader2 } from "lucide-react";
+import { Send, CheckCircle2, AlertTriangle, User, Users, Home, ClipboardList, ShieldAlert, Loader2, MapPin } from "lucide-react";
 import { cn } from "../lib/utils";
 
 export const ReportForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
@@ -12,6 +12,7 @@ export const ReportForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) =
   const [submitted, setSubmitted] = useState(false);
 
   const [formData, setFormData] = useState({
+    woreda: profile?.role === "zone" ? "" : profile?.woreda || "",
     crimeType: "",
     stationName: "",
     perpetrators: { male: 0, female: 0 },
@@ -32,9 +33,37 @@ export const ReportForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) =
     try {
       const reportData = {
         zone: profile.zone,
-        woreda: profile.woreda,
+        woreda: formData.woreda,
         isPeaceful,
-        ...(!isPeaceful ? formData : {}),
+        ...(!isPeaceful ? { ...formData } : { woreda: formData.woreda }),
+        reporterName: profile.name,
+        reporterPhone: profile.phone,
+        status: "new",
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        createdBy: profile.uid,
+      };
+      
+      // Clean up the data to avoid double woreda if it is merged into formData
+      delete (reportData as any).crimeType; // it was spread in formData
+
+      // Let's refine the submission object properly
+      const finalReportData = {
+        zone: profile.zone,
+        woreda: formData.woreda,
+        isPeaceful,
+        ...(isPeaceful ? {} : {
+          crimeType: formData.crimeType,
+          stationName: formData.stationName,
+          perpetrators: formData.perpetrators,
+          injuredCount: formData.injuredCount,
+          lightInjuries: formData.lightInjuries,
+          heavyInjuries: formData.heavyInjuries,
+          propertyDamage: formData.propertyDamage,
+          suspectsCaught: formData.suspectsCaught,
+          exhibit: formData.exhibit,
+        }),
+        description: formData.description,
         reporterName: profile.name,
         reporterPhone: profile.phone,
         status: "new",
@@ -43,7 +72,7 @@ export const ReportForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) =
         createdBy: profile.uid,
       };
 
-      await addDoc(collection(db, "reports"), reportData);
+      await addDoc(collection(db, "reports"), finalReportData);
       setSubmitted(true);
       setTimeout(() => {
         setSubmitted(false);
@@ -68,6 +97,24 @@ export const ReportForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) =
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      {profile?.role === "zone" && (
+        <div className="max-w-md mx-auto mb-8 animate-in slide-in-from-top-4 duration-500">
+           <label className="block text-sm font-bold text-gold mb-2 uppercase tracking-widest text-center">ሪፖርት የሚቀርብበት ወረዳ (Target Woreda)</label>
+           <div className="relative group">
+              <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gold opacity-50 group-focus-within:opacity-100 transition-opacity" />
+              <input 
+                type="text" 
+                required 
+                placeholder="የወረዳውን ስም ያስገቡ..." 
+                className="input-field w-full pl-12 py-4 text-lg border-2 border-gold/20 focus:border-gold shadow-lg shadow-gold/5"
+                value={formData.woreda}
+                onChange={e => setFormData({...formData, woreda: e.target.value})}
+              />
+           </div>
+           <p className="text-[10px] text-neutral-500 mt-2 italic text-center">** የዞን ሀላፊ ስለሆኑ ሪፖርት የሚያቀርቡለትን ወረዳ ስም መጥቀስ አለብዎት::</p>
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 mb-8">
         <button
           type="button"
