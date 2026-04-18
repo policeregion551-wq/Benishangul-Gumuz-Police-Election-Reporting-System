@@ -62,21 +62,36 @@ service cloud.firestore {
       function isValidReport(data) {
         return data.zone is string && data.zone.size() <= 150 &&
                data.woreda is string && data.woreda.size() <= 150 &&
+               data.isPeaceful is bool &&
                data.createdBy == request.auth.uid &&
                data.createdAt == request.time &&
+               data.updatedAt == request.time &&
                data.status == 'new' &&
-               data.reporterName is string && data.reporterName.size() <= 200;
+               data.reporterName is string && data.reporterName.size() <= 200 &&
+               data.reporterPhone is string && data.reporterPhone.size() <= 50 &&
+               data.description is string && data.description.size() <= 5000 &&
+               (data.isPeaceful || (
+                 data.crimeType is string &&
+                 data.stationName is string &&
+                 data.perpetrators is map &&
+                 data.injuredCount is map &&
+                 data.lightInjuries is map &&
+                 data.heavyInjuries is map &&
+                 data.propertyDamage is string &&
+                 data.suspectsCaught is bool &&
+                 data.exhibit is string
+               ));
       }
 
       // Secure List Queries
       allow read: if isSignedIn() && (
         isAdmin() || 
-        (existing().createdBy == request.auth.uid) ||
-        (checkRole('zone') && existing().zone == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.zone)
+        (resource.data.createdBy == request.auth.uid) ||
+        (checkRole('zone') && resource.data.zone == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.zone)
       );
 
-      // Only Woreda police or Admin can create
-      allow create: if isSignedIn() && isValidReport(incoming()) && (checkRole('woreda') || isAdmin());
+      // Woreda police, Zonal police, or Admin can create
+      allow create: if isSignedIn() && isValidReport(incoming()) && (checkRole('woreda') || checkRole('zone') || isAdmin());
       
       // Managed updates
       allow update: if isSignedIn() && (
