@@ -32,28 +32,18 @@ export const ReportForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) =
     
     setLoading(true);
     try {
-      const reportData = {
+      const finalReportData = {
         zone: profile.zone,
-        woreda: formData.woreda,
+        woreda: formData.woreda.trim(),
         isPeaceful,
-        ...(!isPeaceful ? { ...formData } : { woreda: formData.woreda }),
         reporterName: profile.name,
         reporterPhone: profile.phone,
         status: "new",
+        description: formData.description.trim(),
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         createdBy: profile.uid,
-      };
-      
-      // Clean up the data to avoid double woreda if it is merged into formData
-      delete (reportData as any).crimeType; // it was spread in formData
-
-      // Let's refine the submission object properly
-      const finalReportData = {
-        zone: profile.zone,
-        woreda: formData.woreda,
-        isPeaceful,
-        ...(isPeaceful ? {} : {
+        ...(!isPeaceful ? {
           crimeType: formData.crimeType === "ሌላ" ? formData.customCrimeType : formData.crimeType,
           stationName: formData.stationName,
           perpetrators: formData.perpetrators,
@@ -63,14 +53,7 @@ export const ReportForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) =
           propertyDamage: formData.propertyDamage,
           suspectsCaught: formData.suspectsCaught,
           exhibit: formData.exhibit,
-        }),
-        description: formData.description,
-        reporterName: profile.name,
-        reporterPhone: profile.phone,
-        status: "new",
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        createdBy: profile.uid,
+        } : {})
       };
 
       await addDoc(collection(db, "reports"), finalReportData);
@@ -81,6 +64,7 @@ export const ReportForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) =
       }, 3000);
     } catch (err) {
       console.error("Error submitting report:", err);
+      alert("ሪፖርት ሲላክ ስህተት አጋጥሟል:: እባክዎ እንደገና ይሞክሩ::");
     } finally {
       setLoading(false);
     }
@@ -285,25 +269,17 @@ export const ReportForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) =
             <h4 className="text-gold font-serif text-xl border-b border-gold/20 pb-2">ተጨማሪ መረጃ</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
-                <label className="block text-sm font-medium text-neutral-400 mb-1">ኤግዝቢት (Exhibit)</label>
-                <input
-                  type="text"
-                  className="input-field w-full"
-                  value={formData.exhibit}
-                  onChange={(e) => setFormData({...formData, exhibit: e.target.value})}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-neutral-400 mb-1">አጠቃላይ መግለጫ</label>
-                <textarea
-                  className="input-field w-full h-24 resize-none"
-                  value={formData.description}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
-                />
-              </div>
+              <label className="block text-sm font-medium text-neutral-400 mb-1">ኤግዝቢት (Exhibit)</label>
+              <input
+                type="text"
+                className="input-field w-full"
+                value={formData.exhibit}
+                onChange={(e) => setFormData({...formData, exhibit: e.target.value})}
+              />
             </div>
           </div>
         </div>
+      </div>
       )}
 
       {isPeaceful && (
@@ -313,6 +289,16 @@ export const ReportForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) =
           <p className="text-neutral-400">ምንም አይነት የወንጀል ክስተት ከሌለ "ሪፖርት ላክ" የሚለውን በመጫን ሰላም መሆኑን ሪፖርት ያድርጉ::</p>
         </div>
       )}
+
+      <div className="max-w-4xl mx-auto mt-8">
+        <label className="block text-sm font-medium text-neutral-400 mb-2">አጠቃላይ መግለጫ (Add Description/Notes)</label>
+        <textarea
+          className="input-field w-full h-32 resize-none"
+          placeholder="ተጨማሪ አስተያየት ወይም መግለጫ ካለ እዚህ ይፃፉ..."
+          value={formData.description}
+          onChange={(e) => setFormData({...formData, description: e.target.value})}
+        />
+      </div>
 
       <div className="pt-8 border-t border-neutral-800">
         <button
