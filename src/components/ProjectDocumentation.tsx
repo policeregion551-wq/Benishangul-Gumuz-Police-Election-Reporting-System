@@ -1,5 +1,4 @@
 import React from "react";
-import ReactMarkdown from "react-markdown";
 
 // Benishangul Gumuz Police Election Reporting System Documentation
 const documentationText = `# የቤንሻንጉል ጉሙዝ ክልል ፖሊስ ኮሚሽን የ7ኛው አገራዊ እና ክልላዊ ምርጫ የጸጥታ ሪፖርት ማቅረቢያ ሲስተም ሰነድ (PROJECT DOCUMENTATION)
@@ -62,24 +61,33 @@ const documentationText = `# የቤንሻንጉል ጉሙዝ ክልል ፖሊስ
 `;
 
 export const ProjectDocumentation: React.FC = () => {
+  // Simple custom parser to avoid external dependencies
+  const renderLine = (line: string, index: number) => {
+    if (line.startsWith('# ')) return <h1 key={index} className="text-2xl font-bold golden-text mb-6 pb-2 border-b border-gold/20 text-center">{line.substring(2)}</h1>;
+    if (line.startsWith('## ')) return <h2 key={index} className="text-xl font-bold text-gold mt-8 mb-4 border-l-4 border-gold pl-3">{line.substring(3)}</h2>;
+    if (line.startsWith('* ')) return <li key={index} className="ml-4 list-disc text-neutral-300 mb-2">{line.substring(2)}</li>;
+    if (line.match(/^\d+\./)) return <li key={index} className="ml-4 list-decimal text-neutral-300 mb-2">{line.substring(line.indexOf('.') + 1).trim()}</li>;
+    if (line.trim() === '') return <br key={index} />;
+    
+    // Bold text handling
+    const parts = line.split(/(\*\*.*?\*\*)/);
+    return (
+      <p key={index} className="text-neutral-400 mb-3 leading-relaxed">
+        {parts.map((part, i) => {
+          if (part.startsWith('**') && part.endsWith('**')) {
+            return <strong key={i} className="text-white font-bold">{part.substring(2, part.length - 2)}</strong>;
+          }
+          return part;
+        })}
+      </p>
+    );
+  };
+
   return (
     <div className="glass-card p-6 md:p-10 max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="prose prose-invert prose-gold max-w-none">
-        <div className="markdown-body">
-          <ReactMarkdown>{documentationText}</ReactMarkdown>
-        </div>
+      <div className="bg-neutral-900/30 p-4 md:p-8 rounded-2xl overflow-hidden">
+        {documentationText.split('\n').map((line, index) => renderLine(line, index))}
       </div>
-      
-      <style dangerouslySetInnerHTML={{ __html: `
-        .markdown-body h1 { font-family: sans-serif; font-size: 1.875rem; font-weight: 800; color: #B8860B; margin-bottom: 2rem; border-bottom: 2px solid rgba(184, 134, 11, 0.2); padding-bottom: 0.5rem; text-align: center; line-height: 1.2; }
-        .markdown-body h2 { font-size: 1.5rem; font-weight: 700; color: #B8860B; margin-top: 2rem; margin-bottom: 1rem; border-left: 4px solid #B8860B; padding-left: 0.75rem; }
-        .markdown-body h3 { font-size: 1.25rem; font-weight: 600; color: #d4d4d4; margin-top: 1.5rem; margin-bottom: 0.75rem; }
-        .markdown-body p { color: #a3a3a3; line-height: 1.8; margin-bottom: 1.25rem; font-size: 0.9375rem; }
-        .markdown-body ul { list-style-type: none; padding-left: 0; margin-bottom: 1.25rem; }
-        .markdown-body li { position: relative; padding-left: 1.5rem; color: #d4d4d4; margin-bottom: 0.5rem; font-size: 0.875rem; }
-        .markdown-body li::before { content: "•"; position: absolute; left: 0; color: #B8860B; font-weight: bold; }
-        .markdown-body strong { color: #ffffff; font-weight: 600; }
-      ` }} />
     </div>
   );
 };
