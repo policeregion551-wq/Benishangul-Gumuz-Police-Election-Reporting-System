@@ -14,6 +14,7 @@ export const ReportForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) =
   const [formData, setFormData] = useState({
     woreda: profile?.role === "zone" ? "" : profile?.woreda || "",
     crimeType: "",
+    customCrimeType: "",
     stationName: "",
     perpetrators: { male: 0, female: 0 },
     injuredCount: { male: 0, female: 0 },
@@ -53,7 +54,7 @@ export const ReportForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) =
         woreda: formData.woreda,
         isPeaceful,
         ...(isPeaceful ? {} : {
-          crimeType: formData.crimeType,
+          crimeType: formData.crimeType === "ሌላ" ? formData.customCrimeType : formData.crimeType,
           stationName: formData.stationName,
           perpetrators: formData.perpetrators,
           injuredCount: formData.injuredCount,
@@ -167,6 +168,20 @@ export const ReportForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) =
                 <option value="ሌላ">ሌላ (Other)</option>
               </select>
             </div>
+
+            {formData.crimeType === "ሌላ" && (
+              <div className="animate-in slide-in-from-top-2 duration-300">
+                <label className="block text-sm font-medium text-gold mb-1">የወንጀሉን አይነት ይጥቀሱ (Specify Crime Type)</label>
+                <input
+                  type="text"
+                  required={!isPeaceful && formData.crimeType === "ሌላ"}
+                  className="input-field w-full border-gold/50 focus:border-gold"
+                  placeholder="የወንጀሉን አይነት እዚህ ይፃፉ..."
+                  value={formData.customCrimeType}
+                  onChange={(e) => setFormData({...formData, customCrimeType: e.target.value})}
+                />
+              </div>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-neutral-400 mb-1">የምርጫ ጣቢያ ስም</label>
