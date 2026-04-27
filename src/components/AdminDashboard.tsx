@@ -138,32 +138,8 @@ export const AdminDashboard: React.FC = () => {
               </div>
             </div>
 
-            {/* User Activity & System Info */}
+            {/* User Activity */}
             <div className="space-y-6">
-               <div className="glass-card p-6">
-                  <h3 className="text-sm font-bold text-neutral-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                    <Database className="w-4 h-4 text-gold" /> የሲስተም መረጃ (System Info)
-                  </h3>
-                  <div className="space-y-3">
-                    <div className="p-3 bg-white/5 rounded-lg border border-white/5">
-                      <p className="text-[10px] text-neutral-500 uppercase font-black mb-1">Project ID</p>
-                      <p className="text-xs font-mono text-gold truncate">{config.projectId}</p>
-                    </div>
-                    <div className="p-3 bg-white/5 rounded-lg border border-white/10 ring-1 ring-gold/20">
-                      <p className="text-[10px] text-neutral-500 uppercase font-black mb-1">Current Database ID</p>
-                      <p className="text-xs font-mono text-gold truncate font-bold">{config.firestoreDatabaseId || "(default)"}</p>
-                    </div>
-                    <div className="mt-4 p-3 bg-gold/5 rounded-lg border border-gold/10">
-                      <p className="text-[10px] font-bold text-gold uppercase mb-1">💡 መመሪያ (Guide)</p>
-                      <p className="text-[10px] text-neutral-400 leading-tight">
-                        በፋየርቤዝ ኮንሶል ላይ ዳታውን ለማየት፡ <br/>
-                        1. ዳታቤዝ (Database) የሚለው ጋር ይሂዱ <br/>
-                        2. ከላይ ያለውን Dropdown ይጫኑ <br/>
-                        3. <span className="text-gold font-bold">{config.firestoreDatabaseId}</span> የሚለውን ይምረጡ::
-                      </p>
-                    </div>
-                  </div>
-               </div>
 
               <div className="glass-card p-6">
                  <h3 className="text-sm font-bold text-neutral-400 uppercase tracking-widest mb-4">የቅርብ ጊዜ እንቅስቃሴ</h3>
