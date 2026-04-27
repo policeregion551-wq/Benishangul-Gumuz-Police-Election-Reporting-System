@@ -4,7 +4,7 @@ import { db, auth, firebaseAppConfig as config } from "../lib/firebase";
 import { createUserWithEmailAndPassword, getAuth, signOut } from "firebase/auth";
 import { initializeApp, deleteApp } from "firebase/app";
 import { Report, ZONES, UserProfile } from "../types";
-import { Folder, Users, PieChart as PieChartIcon, Settings, Search, Plus, Mail, Lock, User, Phone, MapPin, Loader2, X, ChevronRight, LayoutDashboard, CheckCircle2, ShieldAlert, ClipboardList, BellRing, BookOpen } from "lucide-react";
+import { Folder, Users, PieChart as PieChartIcon, Settings, Search, Plus, Mail, Lock, User, Phone, MapPin, Loader2, X, ChevronRight, LayoutDashboard, CheckCircle2, ShieldAlert, ClipboardList, BellRing, BookOpen, Database } from "lucide-react";
 import { ReportList } from "./ReportList";
 import { ProjectDocumentation } from "./ProjectDocumentation";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
@@ -138,22 +138,51 @@ export const AdminDashboard: React.FC = () => {
               </div>
             </div>
 
-            {/* User Activity / Info */}
-            <div className="glass-card p-6">
-               <h3 className="text-sm font-bold text-neutral-400 uppercase tracking-widest mb-4">የቅርብ ጊዜ እንቅስቃሴ</h3>
-               <div className="space-y-4">
-                  {reports.slice(0, 4).map(r => (
-                    <div key={r.id} className="flex items-center gap-3 pb-3 border-b border-white/5 last:border-0">
-                      <div className={cn("w-2 h-2 rounded-full", r.status === 'new' ? "bg-accent-red animate-pulse" : "bg-neutral-600")} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{r.woreda} - {r.isPeaceful ? 'ሰላም ነው' : r.crimeType}</p>
-                        <p className="text-[10px] text-neutral-500">{formatDate(r.createdAt)}</p>
-                      </div>
+            {/* User Activity & System Info */}
+            <div className="space-y-6">
+               <div className="glass-card p-6">
+                  <h3 className="text-sm font-bold text-neutral-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <Database className="w-4 h-4 text-gold" /> የሲስተም መረጃ (System Info)
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="p-3 bg-white/5 rounded-lg border border-white/5">
+                      <p className="text-[10px] text-neutral-500 uppercase font-black mb-1">Project ID</p>
+                      <p className="text-xs font-mono text-gold truncate">{config.projectId}</p>
                     </div>
-                  ))}
+                    <div className="p-3 bg-white/5 rounded-lg border border-white/10 ring-1 ring-gold/20">
+                      <p className="text-[10px] text-neutral-500 uppercase font-black mb-1">Current Database ID</p>
+                      <p className="text-xs font-mono text-gold truncate font-bold">{config.firestoreDatabaseId || "(default)"}</p>
+                    </div>
+                    <div className="mt-4 p-3 bg-gold/5 rounded-lg border border-gold/10">
+                      <p className="text-[10px] font-bold text-gold uppercase mb-1">💡 መመሪያ (Guide)</p>
+                      <p className="text-[10px] text-neutral-400 leading-tight">
+                        በፋየርቤዝ ኮንሶል ላይ ዳታውን ለማየት፡ <br/>
+                        1. ዳታቤዝ (Database) የሚለው ጋር ይሂዱ <br/>
+                        2. ከላይ ያለውን Dropdown ይጫኑ <br/>
+                        3. <span className="text-gold font-bold">{config.firestoreDatabaseId}</span> የሚለውን ይምረጡ::
+                      </p>
+                    </div>
+                  </div>
                </div>
+
+              <div className="glass-card p-6">
+                 <h3 className="text-sm font-bold text-neutral-400 uppercase tracking-widest mb-4">የቅርብ ጊዜ እንቅስቃሴ</h3>
+                 <div className="space-y-4">
+                    {reports.slice(0, 4).map(r => (
+                      <div key={r.id} className="flex items-center gap-3 pb-3 border-b border-white/5 last:border-0">
+                        <div className={cn("w-2 h-2 rounded-full", r.status === 'new' ? "bg-accent-red animate-pulse" : "bg-neutral-600")} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{r.woreda} - {r.isPeaceful ? 'ሰላም ነው' : r.crimeType}</p>
+                          <p className="text-[10px] text-neutral-500">{formatDate(r.createdAt)}</p>
+                        </div>
+                      </div>
+                    ))}
+                 </div>
+              </div>
             </div>
           </div>
+        </div>
+      )}
 
       {/* Zonal Folders */}
       <div className="space-y-4">
@@ -183,8 +212,6 @@ export const AdminDashboard: React.FC = () => {
           })}
         </div>
       </div>
-        </div>
-      )}
 
       {activeTab === "reports" && (
         <div className="space-y-6">
